@@ -492,7 +492,7 @@ def frequent_background_worker():
 
 
 def background_worker(age_limit: AgeRangePref):
-    bot = Bot(token=TELEGRAM_BOT_TOKEN)
+    bot = Bot(token=1803710581:AAG_0dznqLeB1M852odcSHkAOOWv7rMqLDg)
     time_now = datetime.now()
     # find all distinct pincodes where pincode is not null and at least one user exists with alerts enabled
     query = User.select(User.pincode).where(
