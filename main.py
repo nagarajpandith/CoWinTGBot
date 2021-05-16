@@ -25,23 +25,13 @@ AGE_BUTTON_REGEX = r'^age: (?P<age_mg>\d+)'
 CMD_BUTTON_REGEX = r'^cmd: (?P<cmd_mg>.+)'
 DISABLE_TEXT_REGEX = r'\s*disable|stop|pause\s*'
 
-# All the really complex configs:
-# Following says, how often we should poll CoWin APIs for age group 18+. In seconds
 MIN_18_WORKER_INTERVAL = 30
-# Following says, how often we should poll CoWin APIs for age group 45+. In seconds
-MIN_45_WORKER_INTERVAL = 60 * 10  # 10 minutes
-# Following decides, should we send a notification to user about 45+ or not.
-# If we have sent an alert in the last 30 minutes, we will not bother them
+MIN_45_WORKER_INTERVAL = 60 * 10 
 MIN_45_NOTIFICATION_DELAY = 60 * 30
-# Whenever an exception occurs, we sleep for these many seconds hoping things will be fine
-# when we wake up. This surprisingly works most of the times.
 EXCEPTION_SLEEP_INTERVAL = 10
-# the amount of time we sleep in background workers whenever we hit their APIs
-COWIN_API_DELAY_INTERVAL = 180  # 3 minutes
-# the amount of time we sleep when we get 403 from CoWin
+COWIN_API_DELAY_INTERVAL = 180  
 LIMIT_EXCEEDED_DELAY_INTERVAL = 60 * 5  # 5 minutes
 
-# Enable logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
@@ -86,7 +76,6 @@ class EnumField(IntegerField):
         return self.choices(value)
 
 
-# storage classes
 class User(Model):
     created_at = DateTimeField(default=datetime.now)
     updated_at = DateTimeField(default=datetime.now)
@@ -154,9 +143,9 @@ def start(update: Update, _: CallbackContext) -> None:
     Handles /start, the very first message the user gets whenever they start interacting with this bot
     """
     msg = """Hey there!👋
-Welcome to CoWin Assist bot. 
+Welcome to CoWin Slot Checker! 
 
-I will weekly check slots availability in your area and display them. To start click 🔍 *Check Open Slots*.
+I will check slots' availability in your area and display them. To start click 🔍 *Check Open Slots*.
 
 If you are a first time user I will ask for your age and pincode."""
     update.message.reply_text(msg, reply_markup=get_main_keyboard(), parse_mode="markdown")
