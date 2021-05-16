@@ -256,11 +256,10 @@ def get_disabled_alerts_msg() -> str:
     return """
 Hello there!👋 
 
-Due to recent changes made by Govt for the CoWin website, the bot will not be able to send alerts efficiently. Thereby, we are disabling the alerts permanently. Sorry for the inconvenience. 
+Due to recent changes made by Govt for the CoWin website, the bot will not be able to send alerts efficiently. Thereby, I am disabling the alerts permanently. Sorry for the inconvenience. 
 
 If you would like to delete your data, click on /delete to permanently delete. Check /help for more available options.
 
-If you are a developer and interested in running the bot by yourself, you may check the source code on [Github](https://github.com/avinassh/cowin-assist).
         """
 
 
@@ -268,8 +267,8 @@ def setup_alert_command(update: Update, ctx: CallbackContext) -> None:
     update.effective_chat.send_message(get_disabled_alerts_msg(), parse_mode='markdown', disable_web_page_preview=True)
     return
 
-    # unreachable code, but meh
-    user = check_if_preferences_are_set(update, ctx)  ## noqa
+   
+    user = check_if_preferences_are_set(update, ctx)  
     if not user:
         return
     user.enabled = True
@@ -317,7 +316,7 @@ def get_formatted_message(centers: List[VaccinationCenter], age_limit: AgeRangeP
 
     display_age = True if age_limit == AgeRangePref.MinAgeAny else False
 
-    # TODO: Fix this shit
+   
     template = """
 {%- for c in centers[:10] %}
 *{{ c.name }}* {%- if c.fee_type == 'Paid' %}*(Paid)*{%- endif %}:{% for s in c.get_available_sessions() %}
@@ -337,7 +336,7 @@ def filter_centers_by_age_limit(age_limit: AgeRangePref, centers: List[Vaccinati
     if not centers:
         return centers
 
-    # if user hasn't set any age preferences, then just show everything
+    
     if age_limit in [None, AgeRangePref.MinAgeAny, AgeRangePref.Unknown]:
         return centers
 
@@ -347,7 +346,7 @@ def filter_centers_by_age_limit(age_limit: AgeRangePref, centers: List[Vaccinati
     else:
         filter_age = 45
 
-    # TODO: FIX THIS! This makes a deep copy of Vaccination Center objects
+    
     centers_copy: List[VaccinationCenter] = deepcopy(centers)
     for vc in centers_copy:
         vc.sessions = vc.get_available_sessions_by_age_limit(filter_age)
