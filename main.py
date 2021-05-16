@@ -452,7 +452,7 @@ def send_alert_to_user(bot: telegram.Bot, user: User, centers: List[VaccinationC
     try:
         bot.send_message(chat_id=user.chat_id, text=sanitise_msg(msg), parse_mode='markdown')
     except telegram.error.Unauthorized:
-        # looks like this user blocked us. simply disable them
+       
         user.enabled = False
         user.save()
     else:
@@ -498,7 +498,7 @@ def background_worker(age_limit: AgeRangePref):
     query = User.select(User.pincode).where(
         (User.pincode.is_null(False)) & (User.enabled == True) & (
                 (User.age_limit == AgeRangePref.MinAgeAny) | (User.age_limit == age_limit))).distinct()
-    # TODO: Quick hack to load all pincodes in memory
+   
     query = list(query)
     for distinct_user in query:
         # get all the available vaccination centers with open slots
@@ -571,14 +571,14 @@ def error_handler(update: object, context: CallbackContext) -> None:
     )
 
     try:
-        context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
+        context.bot.send_message(chat_id=938658223, text=message, parse_mode=ParseMode.HTML)
     except Exception as e:
         logger.exception("error_handler", exc_info=e)
 
 
 def main() -> None:
-    # initialise bot and set commands
-    bot = Bot(token=TELEGRAM_BOT_TOKEN)
+   
+    bot = Bot(token=1803710581:AAG_0dznqLeB1M852odcSHkAOOWv7rMqLDg)
     bot.set_my_commands([
         BotCommand(command='start', description='start the bot session'),
         BotCommand(command='alert', description='enable alerts on new slots'),
@@ -589,18 +589,15 @@ def main() -> None:
         BotCommand(command='age', description='change age preference'),
     ])
 
-    # connect and create tables
+   
     db.connect()
     db.create_tables([User, ])
-    # create the required index
-    # TODO:
-    # User.add_index(User.enabled, User.pincode,
-    #                where=((User.enabled == True) & (User.pincode.is_null(False))))
+   
 
-    # initialise the handler
+  
     updater = Updater(TELEGRAM_BOT_TOKEN)
 
-    # Add handlers
+   
     updater.dispatcher.add_handler(CommandHandler("start", start))
     updater.dispatcher.add_handler(CommandHandler("help", help_command))
     updater.dispatcher.add_handler(CommandHandler("alert", setup_alert_command))
@@ -618,14 +615,9 @@ def main() -> None:
     updater.dispatcher.add_handler(MessageHandler(~Filters.command, default))
     updater.dispatcher.add_error_handler(error_handler)
 
-    # Stop all alerts. Don't run the background threads.
-    # launch two background threads, one for slow worker (age group 45+) and another for fast one (age group 18+)
-    # threading.Thread(target=frequent_background_worker).start()
-    # threading.Thread(target=periodic_background_worker).start()
-
-    # Start the Bot
+ 
     updater.start_polling()
-    # block it, baby
+   
     updater.idle()
 
 
@@ -641,7 +633,7 @@ def message_all():
             pass
         except Exception as e:
             logger.info("broke while sending a message to user", exc_info=e)
-        # add a delay so tg won't block us
+        
         time.sleep(0.1)
 
 
