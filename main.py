@@ -25,13 +25,23 @@ AGE_BUTTON_REGEX = r'^age: (?P<age_mg>\d+)'
 CMD_BUTTON_REGEX = r'^cmd: (?P<cmd_mg>.+)'
 DISABLE_TEXT_REGEX = r'\s*disable|stop|pause\s*'
 
+# All the really complex configs:
+# Following says, how often we should poll CoWin APIs for age group 18+. In seconds
 MIN_18_WORKER_INTERVAL = 30
-MIN_45_WORKER_INTERVAL = 60 * 10 
+# Following says, how often we should poll CoWin APIs for age group 45+. In seconds
+MIN_45_WORKER_INTERVAL = 60 * 10  # 10 minutes
+# Following decides, should we send a notification to user about 45+ or not.
+# If we have sent an alert in the last 30 minutes, we will not bother them
 MIN_45_NOTIFICATION_DELAY = 60 * 30
+# Whenever an exception occurs, we sleep for these many seconds hoping things will be fine
+# when we wake up. This surprisingly works most of the times.
 EXCEPTION_SLEEP_INTERVAL = 10
-COWIN_API_DELAY_INTERVAL = 180  
+# the amount of time we sleep in background workers whenever we hit their APIs
+COWIN_API_DELAY_INTERVAL = 180  # 3 minutes
+# the amount of time we sleep when we get 403 from CoWin
 LIMIT_EXCEEDED_DELAY_INTERVAL = 60 * 5  # 5 minutes
 
+# Enable logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
 )
@@ -76,6 +86,7 @@ class EnumField(IntegerField):
         return self.choices(value)
 
 
+# storage classes
 class User(Model):
     created_at = DateTimeField(default=datetime.now)
     updated_at = DateTimeField(default=datetime.now)
@@ -143,9 +154,10 @@ def start(update: Update, _: CallbackContext) -> None:
     Handles /start, the very first message the user gets whenever they start interacting with this bot
     """
     msg = """Hey there!👋
-Welcome to CoWin Slot Checker! 
+Welcome to CoWin Assist bot. 
 
-I will check slots' availability in your area and display them. To start click 🔍 *Check Open Slots*.
+I will weekly check slots availability in your area and alert you when one becomes available. To start either click 
+🔔 *Setup Alert* or 🔍 *Check Open Slots*.
 
 If you are a first time user I will ask for your age and pincode."""
     update.message.reply_text(msg, reply_markup=get_main_keyboard(), parse_mode="markdown")
@@ -181,7 +193,7 @@ def cmd_button_handler(update: Update, ctx: CallbackContext) -> None:
 
 
 def get_help_text_short() -> str:
-    return """This bot will help you to see current available slots by checking CoWin website. To start, click on "Check Open Slots". For first time users, bot will ask for age preference and pincode."""  ## noqa
+    return """This bot will help you to check current available slots in one week and also, alert you when one becomes available. To start, either click on "Setup Alert" or "Check Open Slots". For first time users, bot will ask for age preference and pincode."""  ## noqa
 
 
 def get_help_text() -> str:
@@ -252,23 +264,8 @@ def check_if_preferences_are_set(update: Update, ctx: CallbackContext) -> Option
     return user
 
 
-def get_disabled_alerts_msg() -> str:
-    return """
-Hello there!👋 
-
-Due to recent changes made by Govt for the CoWin website, the bot will not be able to send alerts efficiently. Thereby, I am disabling the alerts permanently. Sorry for the inconvenience. 
-
-If you would like to delete your data, click on /delete to permanently delete. Check /help for more available options.
-
-        """
-
-
 def setup_alert_command(update: Update, ctx: CallbackContext) -> None:
-    update.effective_chat.send_message(get_disabled_alerts_msg(), parse_mode='markdown', disable_web_page_preview=True)
-    return
-
-   
-    user = check_if_preferences_are_set(update, ctx)  
+    user = check_if_preferences_are_set(update, ctx)
     if not user:
         return
     user.enabled = True
@@ -316,7 +313,7 @@ def get_formatted_message(centers: List[VaccinationCenter], age_limit: AgeRangeP
 
     display_age = True if age_limit == AgeRangePref.MinAgeAny else False
 
-   
+    # TODO: Fix this shit
     template = """
 {%- for c in centers[:10] %}
 *{{ c.name }}* {%- if c.fee_type == 'Paid' %}*(Paid)*{%- endif %}:{% for s in c.get_available_sessions() %}
@@ -336,7 +333,7 @@ def filter_centers_by_age_limit(age_limit: AgeRangePref, centers: List[Vaccinati
     if not centers:
         return centers
 
-    
+    # if user hasn't set any age preferences, then just show everything
     if age_limit in [None, AgeRangePref.MinAgeAny, AgeRangePref.Unknown]:
         return centers
 
@@ -346,7 +343,7 @@ def filter_centers_by_age_limit(age_limit: AgeRangePref, centers: List[Vaccinati
     else:
         filter_age = 45
 
-    
+    # TODO: FIX THIS! This makes a deep copy of Vaccination Center objects
     centers_copy: List[VaccinationCenter] = deepcopy(centers)
     for vc in centers_copy:
         vc.sessions = vc.get_available_sessions_by_age_limit(filter_age)
@@ -364,13 +361,15 @@ def check_slots_command(update: Update, ctx: CallbackContext) -> None:
     if not user:
         return
     vaccination_centers: List[VaccinationCenter]
-    try:
-        vaccination_centers = get_available_centers_by_pin(user.pincode)
-    except CoWinTooManyRequests:
+    vaccination_centers = get_available_centers_by_pin(user.pincode)
+    '''
+    except:
+        print(error)
         update.effective_chat.send_message(
             F"Hey sorry, I wasn't able to reach [CoWin Site](https://www.cowin.gov.in/home) at this moment. "
             "Please try after few minutes.", parse_mode="markdown")
         return
+    '''
     vaccination_centers = filter_centers_by_age_limit(user.age_limit, vaccination_centers)
     if not vaccination_centers:
         update.effective_chat.send_message(
@@ -452,7 +451,7 @@ def send_alert_to_user(bot: telegram.Bot, user: User, centers: List[VaccinationC
     try:
         bot.send_message(chat_id=user.chat_id, text=sanitise_msg(msg), parse_mode='markdown')
     except telegram.error.Unauthorized:
-       
+        # looks like this user blocked us. simply disable them
         user.enabled = False
         user.save()
     else:
@@ -492,13 +491,13 @@ def frequent_background_worker():
 
 
 def background_worker(age_limit: AgeRangePref):
-    bot = Bot(token=1803710581:AAG_0dznqLeB1M852odcSHkAOOWv7rMqLDg)
+    bot = Bot(token=TELEGRAM_BOT_TOKEN)
     time_now = datetime.now()
     # find all distinct pincodes where pincode is not null and at least one user exists with alerts enabled
     query = User.select(User.pincode).where(
         (User.pincode.is_null(False)) & (User.enabled == True) & (
                 (User.age_limit == AgeRangePref.MinAgeAny) | (User.age_limit == age_limit))).distinct()
-   
+    # TODO: Quick hack to load all pincodes in memory
     query = list(query)
     for distinct_user in query:
         # get all the available vaccination centers with open slots
@@ -571,14 +570,14 @@ def error_handler(update: object, context: CallbackContext) -> None:
     )
 
     try:
-        context.bot.send_message(chat_id=938658223, text=message, parse_mode=ParseMode.HTML)
+        context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
     except Exception as e:
         logger.exception("error_handler", exc_info=e)
 
 
 def main() -> None:
-   
-    bot = Bot(token=1803710581:AAG_0dznqLeB1M852odcSHkAOOWv7rMqLDg)
+    # initialise bot and set commands
+    bot = Bot(token=TELEGRAM_BOT_TOKEN)
     bot.set_my_commands([
         BotCommand(command='start', description='start the bot session'),
         BotCommand(command='alert', description='enable alerts on new slots'),
@@ -589,15 +588,18 @@ def main() -> None:
         BotCommand(command='age', description='change age preference'),
     ])
 
-   
+    # connect and create tables
     db.connect()
     db.create_tables([User, ])
-   
+    # create the required index
+    # TODO:
+    # User.add_index(User.enabled, User.pincode,
+    #                where=((User.enabled == True) & (User.pincode.is_null(False))))
 
-  
+    # initialise the handler
     updater = Updater(TELEGRAM_BOT_TOKEN)
 
-   
+    # Add handlers
     updater.dispatcher.add_handler(CommandHandler("start", start))
     updater.dispatcher.add_handler(CommandHandler("help", help_command))
     updater.dispatcher.add_handler(CommandHandler("alert", setup_alert_command))
@@ -615,26 +617,14 @@ def main() -> None:
     updater.dispatcher.add_handler(MessageHandler(~Filters.command, default))
     updater.dispatcher.add_error_handler(error_handler)
 
- 
+    # launch two background threads, one for slow worker (age group 45+) and another for fast one (age group 18+)
+    threading.Thread(target=frequent_background_worker).start()
+    threading.Thread(target=periodic_background_worker).start()
+
+    # Start the Bot
     updater.start_polling()
-   
+    # block it, baby
     updater.idle()
-
-
-def message_all():
-    bot = Bot(token=TELEGRAM_BOT_TOKEN)
-    u: User
-    for u in User.select().where(User.deleted_at.is_null(True)):
-        logger.info(F"sending alert to user {u.telegram_id}")
-        try:
-            bot.send_message(chat_id=u.chat_id, text=get_disabled_alerts_msg(), parse_mode='markdown',
-                             disable_web_page_preview=True)
-        except telegram.error.Unauthorized:
-            pass
-        except Exception as e:
-            logger.info("broke while sending a message to user", exc_info=e)
-        
-        time.sleep(0.1)
 
 
 if __name__ == '__main__':
