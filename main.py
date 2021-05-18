@@ -352,18 +352,8 @@ def get_message_header(user: User) -> str:
 
 def check_slots_command(update: Update, ctx: CallbackContext) -> None:
     user = check_if_preferences_are_set(update, ctx)
-    if not user:
-        return
     vaccination_centers: List[VaccinationCenter]
     vaccination_centers = get_available_centers_by_pin(user.pincode)
-    '''
-    except:
-        print(error)
-        update.effective_chat.send_message(
-            F"Hey sorry, I wasn't able to reach [CoWin Site](https://www.cowin.gov.in/home) at this moment. "
-            "Please try after few minutes.", parse_mode="markdown")
-        return
-    '''
     vaccination_centers = filter_centers_by_age_limit(user.age_limit, vaccination_centers)
     if not vaccination_centers:
         update.effective_chat.send_message(
