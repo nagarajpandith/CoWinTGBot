@@ -107,7 +107,6 @@ def sanitise_msg(msg: str) -> str:
     """
     Telegram messages can't be more than `MAX_MESSAGE_LENGTH` bytes. So, this method truncates the message body
     with appropriate size and adds a footer saying message was truncated.
-
     CAUTION: This does a really naive truncation which might end up breaking a valid markdown / html to an invalid one
     and Telegram will reject that message.
     """
@@ -155,10 +154,8 @@ def start(update: Update, _: CallbackContext) -> None:
     """
     msg = """Hey there!👋
 Welcome to CoWin Assist bot. 
-
 I will weekly check slots availability in your area and alert you when one becomes available. To start either click 
 🔔 *Setup Alert* or 🔍 *Check Open Slots*.
-
 If you are a first time user I will ask for your age and pincode."""
     update.message.reply_text(msg, reply_markup=get_main_keyboard(), parse_mode="markdown")
 
@@ -167,7 +164,6 @@ def cmd_button_handler(update: Update, ctx: CallbackContext) -> None:
     """
     Whenever we send buttons to user, we also include callback data. For commands, we usually send the data in the form
     of `cmd: <cmd_name>`. Check `get_main_buttons` or `get_main_keyboard` methods to see how the data is sent.
-
     When user clicks on those buttons, we also get the callback data. Following figures out appropriate command to run
     """
     query = update.callback_query
@@ -302,7 +298,6 @@ def get_available_centers_by_pin(pincode: str) -> List[VaccinationCenter]:
 def get_formatted_message(centers: List[VaccinationCenter], age_limit: AgeRangePref) -> str:
     """
     Given a list of vaccination centers, this method returns a nicely formatted message which can be sent to the user
-
     param: age_limit is only used for display purposes. If the user's selected preference is both
     then we should show the age limit of the vaccination center
     """
@@ -326,7 +321,6 @@ def get_formatted_message(centers: List[VaccinationCenter], age_limit: AgeRangeP
 def filter_centers_by_age_limit(age_limit: AgeRangePref, centers: List[VaccinationCenter]) -> List[VaccinationCenter]:
     """
     filter_centers_by_age_limit filters the centers based on the age preferences set by the user
-
     If there's no filtering required, then it just returns the centers list as it is. If it needs to filter out centers,
     then it makes a deep copy of `centers`, modifies it and returns that
     """
