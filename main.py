@@ -264,7 +264,7 @@ def get_disabled_alerts_msg() -> str:
 Hello there!👋 
 Due to recent changes made by Govt for the CoWin website, the bot will not be able to send alerts efficiently. Thereby, we are disabling the alerts permanently. Sorry for the inconvenience. 
 If you would like to delete your data, click on /delete to permanently delete. Check /help for more available options.
-If you are a developer and interested in running the bot by yourself, you may check the source code on [Github](https://github.com/avinassh/cowin-assist).
+
         """
 
 
