@@ -369,10 +369,7 @@ def check_slots_command(update: Update, ctx: CallbackContext) -> None:
     vaccination_centers: List[VaccinationCenter]
     try:
         vaccination_centers = get_available_centers_by_pin(user.pincode)
-    except CoWinTooManyRequests:
-        update.effective_chat.send_message(
-            F"Hey sorry, I wasn't able to reach [CoWin Site](https://www.cowin.gov.in/home) at this moment. "
-            "Please try after few minutes.", parse_mode="markdown")
+ 
         return
     vaccination_centers = filter_centers_by_age_limit(user.age_limit, vaccination_centers)
     if not vaccination_centers:
