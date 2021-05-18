@@ -1,5 +1,6 @@
 <div align="center">
 <h1>Cowin Assist Telegram Bot</h1>
+##Note that this project is a work by (avinaash)[https://github.com/avinassh/cowin-assist]
 <br>
 </div>
 
