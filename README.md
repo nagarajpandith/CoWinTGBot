@@ -2,7 +2,7 @@
 <h1>Cowin Assist Telegram Bot</h1>
 <br>
 </div>
-Note that this project is a work by (avinaash)[https://github.com/avinassh/cowin-assist].
+Note that this project is completely based on work by (avinaash)[https://github.com/avinassh/cowin-assist].
  This is a simple Telegram bot to Check slots availability
 
 ## Note
