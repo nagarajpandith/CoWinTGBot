@@ -3,7 +3,7 @@ import urllib.parse
 from enum import Enum
 from typing import List, Optional
 
-import requests
+import httpx
 
 
 class ErrorCode(Enum):
@@ -37,8 +37,15 @@ class Session:
     vaccine: str
     slots: List[str]
 
-    def __init__(self, date: str, available_capacity: int, min_age_limit: int, vaccine: str, slots: List[str],
-                 **kwargs):
+    def __init__(
+        self,
+        date: str,
+        available_capacity: int,
+        min_age_limit: int,
+        vaccine: str,
+        slots: List[str],
+        **kwargs,
+    ):
         self.date = date
         self.capacity = available_capacity
         self.min_age_limit = min_age_limit
@@ -99,32 +106,46 @@ class CoWinAPI:
         # some sane defaults
         self.accept_language = "en_US"
         self.base_domain = "https://cdn-api.co-vin.in/"
-        self.requests = requests.Session()
 
     """
     pincode: valid pincode in str
     date: valid date in str with DD-MM-YYYY format
     """
 
-    def calender_by_pin(self: "CoWinAPI", pincode: str, date: str) -> Optional[List[VaccinationCenter]]:
-        url = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin"
-        params = {'pincode': pincode, 'date': date}
-        r = self.requests.get(url, params=params, headers=self.get_default_headers())
-        if r.status_code == requests.codes.bad_request:
+    def calender_by_pin(
+        self: "CoWinAPI", pincode: str, date: str
+    ) -> Optional[List[VaccinationCenter]]:
+        url = urllib.parse.urljoin(
+            self.base_domain, "/api/v2/appointment/sessions/public/calendarByPin"
+        )
+        params = {"pincode": pincode, "date": date}
+        r = httpx.get(url, params=params, headers=self.get_default_headers())
+        if r.status_code == httpx.codes.BAD_REQUEST:
             raise CoWinAPIException(**r.json())
-        if r.status_code == requests.codes.forbidden:
-            raise CoWinTooManyRequests(errorCode=ErrorCode.TooManyRequests.value, error=ErrorCode.TooManyRequests.value)
-        if not r.status_code == requests.codes.ok:
+        if r.status_code == httpx.codes.FORBIDDEN:
+            raise CoWinTooManyRequests(
+                errorCode=ErrorCode.TooManyRequests.value,
+                error=ErrorCode.TooManyRequests.value,
+            )
+        if not r.status_code == httpx.codes.OK:
             return
         if centers := r.json()["centers"]:
             return [VaccinationCenter.from_json(c) for c in centers]
         return
 
     def get_default_headers(self) -> dict:
-        return {'Accept-Language': self.accept_language, 'accept': 'application/json',
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, '
-                              'like Gecko) Chrome/90.0.4430.93 Safari/537.36'}
+        return {
+            "Accept": "application/json, text/plain",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Accept-Encoding": "gzip",
+            "Origin": "https://www.cowin.gov.in",
+            "Referer": "https://www.cowin.gov.in/",
+            "Pragma": "no-cache",
+            "Cache-Control": "no-cache",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/92.0.4476.0 Safari/537.36",
+        }
 
     @staticmethod
     def today() -> str:
-        return datetime.today().strftime('%d-%m-%Y')
+        return datetime.today().strftime("%d-%m-%Y")
