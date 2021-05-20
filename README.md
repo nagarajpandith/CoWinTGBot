@@ -1,18 +1,20 @@
-<div align="center">
-<h1>Cowin Assist Telegram Bot</h1>
-<br>
-</div>
-Note that this project is completely based on work by avinaash-->https://github.com/avinassh/cowin-assist.
- This is a simple Telegram bot to Check slots availability
+# Covid19 Vaccine India Assist Telegram Bot
+
+Extended from [avinassh/cowin-assist](https://github.com/avinassh/cowin-assist). Go check it out.
+
+This is a simple Telegram bot to
+
+- Check slots availability
+- Get an alert when slots become available
 
 ## Note
 
 On 6th May 2021, CoWin API added caching and rate limits. The public API data would be cached upto 30 minutes, so the alerts wouldn't be so instant in busy areas, which reduced this bot's functionality to being a nice UI for public CoWin site in Telegram.
 
-### System Requirements
+## Disclaimer
 
-This bot is built and tested on Linux and Mac OS X. It should work on Windows machines as well, but I haven't tested it. Other requirements:
+Not affiliated with Ministry of Health and Family Welfare OR Government of India in any capacity.
 
-- Python 3 (version 3.8+)
-- SQLite 3
+## License
 
+Released under MIT License. Check `LICENSE` file more info.
