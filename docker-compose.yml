@@ -1,0 +1,16 @@
+version: "3.3"
+
+services:
+
+  bot:
+    # If you don't want to use the official image and build one from sources:
+    # build:
+    #   context: .
+    #   dockerfile: ./support/docker/production/Dockerfile.buster
+    image: karambir/covid19-assist:version-0.2
+    env_file:
+      - .env
+
+    volumes:
+      - ./docker-volume:/data
+    restart: "unless-stopped"
