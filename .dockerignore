@@ -1,0 +1,12 @@
+logs/
+.venv/
+venv/
+docker-volume/
+.env
+
+.git
+.cache
+.idea
+*.db
+
+secrets.py
