@@ -1,4 +1,6 @@
-# Covid19 Vaccine India Assist Telegram Bot
+[The bot is no more active as there's no such need for now. The bot was previously hosted on AWS, and temporarily hosted on Heroku later. But the bot couldn't access CoWin API as Heroku is not an India based server]
+
+# Covid-19 Vaccine India Assist Telegram Bot
 
 Extended from [avinassh/cowin-assist](https://github.com/avinassh/cowin-assist). Go check it out.
 
